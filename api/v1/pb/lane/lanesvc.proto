@@ -1,0 +1,23 @@
+syntax = "proto3";
+option go_package = "github.com/linki-swap/services/api/v1/pb/lane";
+
+package pb;
+
+service Lane {
+    rpc Networks (NetworksRequest) returns (NetworksReply) {}
+}
+
+message Network {
+    string name = 1;
+	string symbol = 2;
+	string logo = 3;
+}
+
+message NetworksRequest {
+    string networktype = 1;
+}
+
+message NetworksReply {
+    repeated Network networks = 1;
+    string Err = 2;
+}

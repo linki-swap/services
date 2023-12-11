@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -19,12 +20,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const defaultHTTPPort = "8081"
+const defaultHTTPPort = "8080"
 
 func main() {
 	var (
 		logger   log.Logger
-		httpAddr = net.JoinHostPort("localhost", envString("HTTP_PORT", defaultHTTPPort))
+		httpAddr = net.JoinHostPort("0.0.0.0", envString("HTTP_PORT", defaultHTTPPort))
 	)
 
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
@@ -53,6 +54,7 @@ func main() {
 	var service = apigateway.NewService()
 	service = apigateway.LoggingMiddleware(logger)(service)
 	service = apigateway.InstrumentingMiddleware(requestCount, requestLatency, countResult)(service)
+	service = apigateway.ProxyingMiddleware(context.Background(), "0.0.0.0:8082", logger)(service)
 	eps := endpoints.NewEndpointSet(service)
 	httpHandler := transport.NewHTTPHandler(eps)
 	httpHandler.Handle("/metrics", promhttp.Handler())
